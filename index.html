@@ -89,11 +89,14 @@
         </section>
 
         <section id="about">
-            <div class="section-content">
-                <h2>A Decade of Engineering Excellence</h2>
-                <div class="about-content">
-                <p>Kingfisher Software was founded on a simple principle: to build robust, elegant software solutions grounded in deep technical expertise. With over a decade of experience spanning the entire software development lifecycle, our founder has moved from hands-on development to technical leadership, culminating in a role as a Chief Technology Officer responsible for a complex, high-availability messaging platform.</p>
-                <p>This journey has provided a unique perspective, combining a passion for clean, maintainable code with a strategic understanding of infrastructure, scalability, and business objectives. We don't just build software; we engineer solutions.</p>
+            <div class="section-content about-grid">
+                <div class="about-image-container">
+                    <img src="bird.jpg" alt="A colorful kingfisher bird" class="about-image">
+                </div>
+                <div class="about-text">
+                    <h2>A Decade of Engineering Excellence</h2>
+                    <p>With over 10 years of professional experience, I have led the design and implementation of complex software systems for clients ranging from startups to large enterprises. My expertise lies in creating scalable, resilient, and maintainable solutions that align with business objectives.</p>
+                    <p>I am passionate about leveraging modern technologies and best practices to solve challenging problems and deliver exceptional value.</p>
                 </div>
             </div>
         </section>
@@ -101,7 +104,8 @@
         <section id="contact">
             <div class="section-content">
                 <h2>Get in Touch</h2>
-                <form id="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+                <form id="contact-form" name="contact" method="POST" data-netlify="true">
+                <input type="hidden" name="form-name" value="contact" />
                 <div class="form-group">
                     <label for="name">Name</label>
                     <input type="text" id="name" name="name" required>
@@ -122,9 +126,8 @@
     <footer>
         <div class="footer-content">
             <div class="footer-column">
-                <a href="#home" class="logo-container">
-                    <img src="logo_minimal.svg" alt="Kingfisher Software Logo" class="logo">
-                    <span class="company-name">Kingfisher Software</span>
+                <a href="#home" class="logo-container footer-logo-container">
+                    <img src="logo_full.svg" alt="Kingfisher Software Logo" class="logo footer-logo">
                 </a>
             </div>
             <div class="footer-column">

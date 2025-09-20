@@ -11,9 +11,22 @@ document.addEventListener('DOMContentLoaded', function() {
             y: null
         };
 
+        const heroContent = document.querySelector('.hero-content');
+        let contentBox;
+
         function setCanvasSize() {
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
+            if (heroContent) {
+                const rect = heroContent.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                contentBox = {
+                    left: rect.left - canvasRect.left,
+                    top: rect.top - canvasRect.top,
+                    right: rect.right - canvasRect.left,
+                    bottom: rect.bottom - canvasRect.top
+                };
+            }
         }
 
         class Node {
@@ -28,13 +41,24 @@ document.addEventListener('DOMContentLoaded', function() {
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fillStyle = 'rgba(255, 183, 77, 0.8)'; // Kingfisher Orange
                 ctx.fill();
             }
 
             update() {
                 if (this.x < 0 || this.x > canvas.width) this.vx = -this.vx;
                 if (this.y < 0 || this.y > canvas.height) this.vy = -this.vy;
+
+                // Check for collision with the content box
+                if (contentBox) {
+                    const nextX = this.x + this.vx;
+                    const nextY = this.y + this.vy;
+                    if (nextX > contentBox.left && nextX < contentBox.right && nextY > contentBox.top && nextY < contentBox.bottom) {
+                        this.vx = -this.vx;
+                        this.vy = -this.vy;
+                    }
+                }
+
                 this.x += this.vx;
                 this.y += this.vy;
             }
@@ -44,8 +68,12 @@ document.addEventListener('DOMContentLoaded', function() {
             setCanvasSize();
             nodes = [];
             for (let i = 0; i < nodeCount; i++) {
-                const x = Math.random() * canvas.width;
-                const y = Math.random() * canvas.height;
+                let x, y;
+                do {
+                    x = Math.random() * canvas.width;
+                    y = Math.random() * canvas.height;
+                } while (contentBox && x > contentBox.left && x < contentBox.right && y > contentBox.top && y < contentBox.bottom);
+
                 const vx = (Math.random() - 0.5) * 0.5;
                 const vy = (Math.random() - 0.5) * 0.5;
                 nodes.push(new Node(x, y, vx, vy));
@@ -57,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Connect to mouse
                 let distToMouse = Math.sqrt(Math.pow(nodes[i].x - mouse.x, 2) + Math.pow(nodes[i].y - mouse.y, 2));
                 if (distToMouse < maxDist) {
-                    ctx.strokeStyle = `rgba(184, 155, 114, ${1 - distToMouse / maxDist})`;
+                    ctx.strokeStyle = `rgba(255, 183, 77, ${1 - distToMouse / maxDist})`; // Kingfisher Orange
                     ctx.lineWidth = 0.5;
                     ctx.beginPath();
                     ctx.moveTo(nodes[i].x, nodes[i].y);
@@ -69,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 for (let j = i + 1; j < nodes.length; j++) {
                     let dist = Math.sqrt(Math.pow(nodes[i].x - nodes[j].x, 2) + Math.pow(nodes[i].y - nodes[j].y, 2));
                     if (dist < maxDist) {
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 - dist / maxDist})`;
+                        ctx.strokeStyle = `rgba(255, 183, 77, ${0.6 - dist / maxDist})`; // Kingfisher Orange
                         ctx.lineWidth = 0.3;
                         ctx.beginPath();
                         ctx.moveTo(nodes[i].x, nodes[i].y);
@@ -111,20 +139,16 @@ document.addEventListener('DOMContentLoaded', function() {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(contactForm);
-            fetch(contactForm.action, {
+            fetch('/', {
                 method: 'POST',
-                body: formData,
-                headers: { 'Accept': 'application/json' }
-            }).then(response => {
-                if (response.ok) {
-                    alert('Thank you for your message! We will get back to you soon.');
-                    contactForm.reset();
-                } else {
-                    response.json().then(data => {
-                        alert(data.errors?.map(e => e.message).join(', ') || 'Oops! There was a problem.');
-                    });
-                }
-            }).catch(() => alert('Oops! There was a problem submitting your form.'));
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(formData).toString()
+            }).then(() => {
+                contactForm.reset();
+                alert('Thank you for your message! It has been sent.');
+            }).catch((error) => {
+                alert('Sorry, there was an error sending your message. Please try again later.');
+            });
         });
     }
 });
