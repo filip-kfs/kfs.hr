@@ -251,9 +251,60 @@ button[type="submit"]:hover {
 }
 
 footer {
-    text-align: center;
-    padding: 2rem 0;
-    margin-top: 4rem;
+    padding: 4rem 1rem 2rem;
+    background-color: var(--surface-color);
     border-top: 1px solid var(--border-color);
     color: var(--secondary-text-color);
+}
+
+.footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto 2rem;
+    gap: 2rem;
+}
+
+.footer-column {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-column h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-text-color);
+    margin-bottom: 1rem;
+}
+
+.footer-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-column ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-column a {
+    text-decoration: none;
+    color: var(--secondary-text-color);
+    transition: color 0.3s;
+}
+
+.footer-column a:hover {
+    color: var(--accent-color);
+}
+
+.footer-column p {
+    margin: 0 0 1rem 0;
+    line-height: 1.8;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
 }
