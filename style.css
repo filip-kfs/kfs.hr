@@ -1,0 +1,259 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+:root {
+    --background-color: #FFFFFF;
+    --primary-text-color: #111827;
+    --secondary-text-color: #6B7280;
+    --accent-color: #B89B72;
+    --accent-hover-color: #A38A65;
+    --surface-color: #F9FAFB;
+    --border-color: #E5E7EB;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    line-height: 1.6;
+    background-color: var(--background-color);
+    color: var(--primary-text-color);
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+header {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.logo {
+    height: 40px;
+}
+
+.company-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-text-color);
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--secondary-text-color);
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+nav a:hover {
+    color: var(--primary-text-color);
+}
+
+.hero {
+    position: relative;
+    text-align: center;
+    padding: 8rem 1rem;
+    background-color: #111827; /* Dark background for constellation */
+    overflow: hidden; /* Hide anything that might escape the canvas */
+}
+
+#constellation-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+
+.hero-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.hero h1 {
+    font-size: 4rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+    letter-spacing: -2px;
+    color: #FFFFFF;
+}
+
+
+
+.hero p {
+    font-size: 1.25rem;
+    color: #9CA3AF;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* --- Consolidated Section Styling --- */
+
+section {
+    padding: 4rem 1rem;
+}
+
+#approach, #contact {
+    background-color: var(--surface-color);
+}
+
+.section-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+#about .section-content {
+    max-width: 800px;
+    text-align: center;
+}
+
+#contact .section-content {
+    max-width: 700px;
+}
+
+#services h2, #approach h2, #about h2, #contact h2 {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 900;
+    margin-top: 0;
+    margin-bottom: 3rem;
+    letter-spacing: -1px;
+}
+
+.about-content p {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.services-grid, .approach-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.service-card, .approach-card {
+    padding: 2.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+#services .service-card, #about .service-card {
+    background-color: var(--surface-color);
+}
+
+#approach .approach-card {
+    background-color: var(--background-color);
+}
+
+.service-card:hover, .approach-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    border-color: var(--accent-color);
+}
+
+.service-icon {
+    width: 40px;
+    height: 40px;
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+}
+
+.service-card h3, .approach-card h4 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--primary-text-color);
+}
+
+.service-card p, .approach-card p {
+    color: var(--secondary-text-color);
+    margin-bottom: 0;
+}
+
+.form-group {
+    margin-bottom: 2rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: var(--primary-text-color);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(184, 155, 114, 0.3);
+}
+
+button[type="submit"] {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button[type="submit"]:hover {
+    background-color: var(--accent-hover-color);
+}
+
+footer {
+    text-align: center;
+    padding: 2rem 0;
+    margin-top: 4rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--secondary-text-color);
+}
