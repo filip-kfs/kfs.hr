@@ -15,8 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
         let contentBox;
 
         function setCanvasSize() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = canvas.offsetWidth * dpr;
+            canvas.height = canvas.offsetHeight * dpr;
+            ctx.scale(dpr, dpr);
             if (heroContent) {
                 const rect = heroContent.getBoundingClientRect();
                 const canvasRect = canvas.getBoundingClientRect();
