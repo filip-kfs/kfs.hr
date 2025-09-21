@@ -131,8 +131,10 @@ document.addEventListener('DOMContentLoaded', function() {
             mouse.y = null;
         });
 
-        init();
-        animate();
+        setTimeout(() => {
+            init();
+            animate();
+        }, 0);
     }
 
     // Contact Form Logic
