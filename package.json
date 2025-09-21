@@ -5,13 +5,15 @@
   "scripts": {
     "build:js": "terser script.js -c -m -o script.min.js",
     "build:css": "cssnano style.css style.min.css",
-    "build": "npm run build:js && npm run build:css"
+    "build:images": "node optimize-images.js",
+    "build": "npm run build:images && npm run build:js && npm run build:css"
   },
   "dependencies": {
     "terser": "^5.44.0"
   },
   "devDependencies": {
     "cssnano": "^7.1.1",
-    "cssnano-cli": "^1.0.5"
+    "cssnano-cli": "^1.0.5",
+    "sharp": "^0.34.4"
   }
 }
