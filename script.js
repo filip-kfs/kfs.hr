@@ -152,6 +152,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Mobile Navigation Logic
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const navLinks = document.getElementById('nav-links');
+
+    if (hamburgerButton && navLinks) {
+        hamburgerButton.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            const isExpanded = navLinks.classList.contains('active');
+            hamburgerButton.setAttribute('aria-expanded', isExpanded);
+        });
+
+        // Close menu when a link is clicked
+        navLinks.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A') {
+                navLinks.classList.remove('active');
+                hamburgerButton.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
     // Custom Scroll Animation Logic
     const sections = document.querySelectorAll('.fade-in-section');
 
