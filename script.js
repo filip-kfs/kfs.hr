@@ -38,7 +38,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     const outwardNeighbors = currentEnd.neighbors.filter(n => {
                         const neighborDist = Math.sqrt(Math.pow(n.x - centerX, 2) + Math.pow(n.y - centerY, 2));
-                        return neighborDist > distFromCenter;
+                        // Add a bias for vertical movement when near the top or bottom
+                        const verticalDelta = Math.abs(n.y - centerY) - Math.abs(currentEnd.y - centerY);
+                        return neighborDist > distFromCenter || verticalDelta > 0;
                     });
 
                     if (outwardNeighbors.length > 0) {
