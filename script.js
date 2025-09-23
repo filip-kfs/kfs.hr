@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             draw() {
-                if (this.pathIndex >= this.path.length - 1) return;
+                if (!this.path || this.pathIndex >= this.path.length - 1) return;
                 const startNode = this.path[this.pathIndex];
                 const endNode = this.path[this.pathIndex + 1];
                 const x = startNode.x + (endNode.x - startNode.x) * this.progress;
@@ -144,32 +144,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Designate hubs using a farthest point sampling approach
-            const numHubs = 15;
-            if (grid.length > 0) {
-                let firstHub = grid[Math.floor(Math.random() * grid.length)];
-                hubs.push(firstHub);
-                let candidates = grid.filter(n => n !== firstHub);
+            // Manually define hub locations for even coverage
+            const keyLocations = [
+                // Corners
+                { x: 0.1, y: 0.1 }, { x: 0.9, y: 0.1 }, { x: 0.1, y: 0.9 }, { x: 0.9, y: 0.9 },
+                // Midpoints
+                { x: 0.5, y: 0.1 }, { x: 0.1, y: 0.5 }, { x: 0.9, y: 0.5 }, { x: 0.5, y: 0.9 },
+                // Center
+                { x: 0.5, y: 0.5 },
+                // In-between points
+                { x: 0.25, y: 0.25 }, { x: 0.75, y: 0.25 }, { x: 0.25, y: 0.75 }, { x: 0.75, y: 0.75 },
+                { x: 0.25, y: 0.5 }, { x: 0.75, y: 0.5 }, { x: 0.5, y: 0.25 }, { x: 0.5, y: 0.75 }
+            ];
 
-                for (let i = 1; i < numHubs && candidates.length > 0; i++) {
-                    let bestCandidate = null;
-                    let maxMinDist = -1;
-                    for (let candidate of candidates) {
-                        let minDistToHub = Infinity;
-                        for (let hub of hubs) {
-                            const dist = Math.sqrt(Math.pow(candidate.x - hub.x, 2) + Math.pow(candidate.y - hub.y, 2));
-                            minDistToHub = Math.min(minDistToHub, dist);
+            if (grid.length > 0) {
+                keyLocations.forEach(loc => {
+                    let centerNode = null;
+                    let minDistance = Infinity;
+                    const targetX = canvas.offsetWidth * loc.x;
+                    const targetY = canvas.offsetHeight * loc.y;
+
+                    // First, find the node closest to the key location
+                    grid.forEach(node => {
+                        const dist = Math.sqrt(Math.pow(node.x - targetX, 2) + Math.pow(node.y - targetY, 2));
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            centerNode = node;
                         }
-                        if (minDistToHub > maxMinDist) {
-                            maxMinDist = minDistToHub;
-                            bestCandidate = candidate;
+                    });
+
+                    if (centerNode) {
+                        // Create a 9x9 search area around the center node
+                        const searchRadius = 1;
+                        const nearbyNodes = grid.filter(node => 
+                            Math.abs(node.x - centerNode.x) <= searchRadius &&
+                            Math.abs(node.y - centerNode.y) <= searchRadius
+                        );
+
+                        // Select a random node from the nearby area
+                        let randomNode = nearbyNodes[Math.floor(Math.random() * nearbyNodes.length)];
+
+                        // Ensure we don't add the same hub twice
+                        if (randomNode && !hubs.includes(randomNode)) {
+                            hubs.push(randomNode);
+                        } else if (!hubs.includes(centerNode)) {
+                            // Fallback to the center node if the random one was already picked
+                            hubs.push(centerNode);
                         }
                     }
-                    if (bestCandidate) {
-                        hubs.push(bestCandidate);
-                        candidates = candidates.filter(n => n !== bestCandidate);
-                    }
-                }
+                });
             }
 
             const shuffledHubs = [...hubs].sort(() => 0.5 - Math.random());
@@ -244,6 +267,70 @@ document.addEventListener('DOMContentLoaded', function() {
         canvas.addEventListener('mouseleave', () => {
             mouse.x = undefined;
             mouse.y = undefined;
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            const clickRadius = 15; // Generous click radius
+
+            let clickedHub = null;
+            for (const hub of hubs) {
+                const dist = Math.sqrt(Math.pow(hub.x - clickX, 2) + Math.pow(hub.y - clickY, 2));
+                if (dist < clickRadius) {
+                    clickedHub = hub;
+                    break;
+                }
+            }
+
+            if (clickedHub) {
+                // If a hub was clicked, remove it only if it's a 'default' type
+                if (clickedHub.type === 'default') {
+                    hubs = hubs.filter(h => h !== clickedHub);
+                    // Reroute any particles that were heading to the removed hub
+                    traffic.forEach(t => {
+                        t.nodesToVisit.delete(clickedHub);
+                        if (t.endHub === clickedHub) {
+                            // This particle's destination was just removed, it needs a new one immediately
+                            const remainingDefaults = Array.from(t.nodesToVisit);
+                            if (remainingDefaults.length > 0) {
+                                t.endHub = remainingDefaults[Math.floor(Math.random() * remainingDefaults.length)];
+                            } else {
+                                // No more default hubs to visit, send to a terminator
+                                const terminators = hubs.filter(h => h.type === 'terminator');
+                                if (terminators.length > 0) {
+                                    t.endHub = terminators[Math.floor(Math.random() * terminators.length)];
+                                } else {
+                                    t.progress = 1.1; // No other option, mark for removal
+                                }
+                            }
+                            t.path = t.findPath(t.startHub, t.endHub);
+                            t.pathIndex = 0;
+                            t.progress = 0;
+                        }
+                    });
+                }
+            } else {
+                // If empty space was clicked, add a new 'default' hub
+                let nearestNode = null;
+                let minDistance = Infinity;
+                grid.forEach(node => {
+                    const dist = Math.sqrt(Math.pow(node.x - clickX, 2) + Math.pow(node.y - clickY, 2));
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        nearestNode = node;
+                    }
+                });
+
+                if (nearestNode && !hubs.includes(nearestNode)) {
+                    nearestNode.type = 'default';
+                    nearestNode.isHub = true;
+                    hubs.push(nearestNode);
+                    // All particles must add this new hub to their mission list
+                    traffic.forEach(t => t.nodesToVisit.add(nearestNode));
+                }
+            }
         });
 
         init();
