@@ -15,13 +15,21 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         class Traffic {
-            constructor(startHub, endHub) {
-                this.startHub = startHub;
-                this.endHub = endHub;
-                this.path = this.findPath(startHub, endHub);
+            constructor(generator) {
+                this.generator = generator; // Keep track of its origin
+                this.startHub = generator;
+
+                // Create a set of all 'default' hubs that need to be visited
+                this.nodesToVisit = new Set(hubs.filter(h => h.type === 'default'));
+
+                // Select a random first destination from the set of default hubs
+                const potentialDestinations = Array.from(this.nodesToVisit);
+                this.endHub = potentialDestinations[Math.floor(Math.random() * potentialDestinations.length)];
+
+                this.path = this.findPath(this.startHub, this.endHub);
                 this.pathIndex = 0;
                 this.progress = 0;
-                this.speed = Math.random() * 0.04 + 0.02;
+                this.speed = Math.random() * 0.08 + 0.02; // Wider speed range: 0.02 to 0.10
                 this.color = 'rgba(255, 183, 77, 0.8)';
             }
 
@@ -80,22 +88,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.progress = 0;
                     this.pathIndex++;
                     if (this.pathIndex >= this.path.length - 1) {
-                        const currentHub = this.endHub;
+                        // Arrived at a destination
+                        this.startHub = this.endHub;
 
-                        // Handle hub types
-                        if (currentHub.type === 'amplifier' && Math.random() < 0.3) {
-                            const newEndHub = hubs[Math.floor(Math.random() * hubs.length)];
-                            if (currentHub !== newEndHub) traffic.push(new Traffic(currentHub, newEndHub));
-                        } else if (currentHub.type === 'dampener' && Math.random() < 0.4) {
+                        // If the particle has reached a terminator, its mission is complete.
+                        if (this.startHub.type === 'terminator') {
                             this.progress = 1.1; // Mark for removal
                             return;
                         }
 
-                        // Find a new destination
-                        this.startHub = currentHub;
-                        this.endHub = hubs[Math.floor(Math.random() * hubs.length)];
+                        // Otherwise, it's a default hub. Remove it from the list of places to visit.
+                        this.nodesToVisit.delete(this.startHub);
+
+                        const remainingDefaults = Array.from(this.nodesToVisit);
+
+                        if (remainingDefaults.length > 0) {
+                            // If there are still default hubs to visit, pick one randomly
+                            this.endHub = remainingDefaults[Math.floor(Math.random() * remainingDefaults.length)];
+                        } else {
+                            // Mission to visit default hubs is complete, find a terminator
+                            const terminators = hubs.filter(h => h.type === 'terminator');
+                            if (terminators.length > 0) {
+                                this.endHub = terminators[Math.floor(Math.random() * terminators.length)];
+                            } else {
+                                // No terminators available, mark for removal
+                                this.progress = 1.1;
+                                return;
+                            }
+                        }
+
                         this.path = this.findPath(this.startHub, this.endHub);
                         this.pathIndex = 0;
+                        this.progress = 0;
                     }
                 }
             }
@@ -143,50 +167,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Designate hubs using a farthest point sampling approach
-            const numHubs = 15;
-            if (grid.length > 0) {
-                let firstHub = grid[Math.floor(Math.random() * grid.length)];
-                hubs = [firstHub];
-                let candidates = grid.filter(n => n !== firstHub);
+            // Manually define hub locations for even coverage
+            hubs = [];
+            const keyLocations = [
+                // Corners
+                { x: 0.1, y: 0.1 }, { x: 0.9, y: 0.1 }, { x: 0.1, y: 0.9 }, { x: 0.9, y: 0.9 },
+                // Midpoints
+                { x: 0.5, y: 0.1 }, { x: 0.1, y: 0.5 }, { x: 0.9, y: 0.5 }, { x: 0.5, y: 0.9 },
+                // Center
+                { x: 0.5, y: 0.5 },
+                // In-between points
+                { x: 0.25, y: 0.25 }, { x: 0.75, y: 0.25 }, { x: 0.25, y: 0.75 }, { x: 0.75, y: 0.75 },
+                { x: 0.25, y: 0.5 }, { x: 0.75, y: 0.5 }, { x: 0.5, y: 0.25 }, { x: 0.5, y: 0.75 }
+            ];
 
-                for (let i = 1; i < numHubs && candidates.length > 0; i++) {
-                    let bestCandidate = null;
-                    let maxMinDist = -1;
-                    for (let candidate of candidates) {
-                        let minDistToHub = Infinity;
-                        for (let hub of hubs) {
-                            const dist = Math.sqrt(Math.pow(candidate.x - hub.x, 2) + Math.pow(candidate.y - hub.y, 2));
-                            minDistToHub = Math.min(minDistToHub, dist);
+            if (grid.length > 0) {
+                keyLocations.forEach(loc => {
+                    let closestNode = null;
+                    let minDistance = Infinity;
+                    const targetX = canvas.offsetWidth * loc.x;
+                    const targetY = canvas.offsetHeight * loc.y;
+
+                    grid.forEach(node => {
+                        const dist = Math.sqrt(Math.pow(node.x - targetX, 2) + Math.pow(node.y - targetY, 2));
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            closestNode = node;
                         }
-                        if (minDistToHub > maxMinDist) {
-                            maxMinDist = minDistToHub;
-                            bestCandidate = candidate;
-                        }
+                    });
+
+                    if (closestNode && !hubs.includes(closestNode)) {
+                        hubs.push(closestNode);
                     }
-                    if (bestCandidate) {
-                        hubs.push(bestCandidate);
-                        candidates = candidates.filter(n => n !== bestCandidate);
-                    }
-                }
+                });
             }
 
             // Assign types to hubs
             const shuffledHubs = [...hubs].sort(() => 0.5 - Math.random());
-            const numAmplifiers = 3;
-            const numDampeners = 3;
-            shuffledHubs.slice(0, numAmplifiers).forEach(h => h.type = 'amplifier');
-            shuffledHubs.slice(numAmplifiers, numAmplifiers + numDampeners).forEach(h => h.type = 'dampener');
+            const numGenerators = 5;
+            const numTerminators = 5;
+            shuffledHubs.slice(0, numGenerators).forEach(h => h.type = 'generator');
+            shuffledHubs.slice(numGenerators, numGenerators + numTerminators).forEach(h => h.type = 'terminator');
             hubs.forEach(h => { if (!h.type) h.type = 'default'; h.isHub = true; });
 
-            // Initial traffic
-            for (let i = 0; i < numHubs * 8; i++) {
-                const startHub = hubs[Math.floor(Math.random() * hubs.length)];
-                const endHub = hubs[Math.floor(Math.random() * hubs.length)];
-                if (startHub !== endHub) {
-                    traffic.push(new Traffic(startHub, endHub));
+            // Initial traffic: Create a burst of particles from each generator
+            const generators = hubs.filter(h => h.type === 'generator');
+            const particlesPerGenerator = 10;
+            generators.forEach(gen => {
+                for (let i = 0; i < particlesPerGenerator; i++) {
+                    traffic.push(new Traffic(gen));
                 }
-            }
+            });
         }
 
         function animate() {
@@ -204,10 +235,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Draw hub nodes
             hubs.forEach(hub => {
                 switch (hub.type) {
-                    case 'amplifier':
+                    case 'generator':
                         ctx.fillStyle = 'rgba(110, 231, 183, 0.7)'; // Green
                         break;
-                    case 'dampener':
+                    case 'terminator':
                         ctx.fillStyle = 'rgba(252, 165, 165, 0.7)'; // Red
                         break;
                     default:
@@ -224,14 +255,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 t.draw();
             });
 
-            // Mouse interaction: generate traffic from nearby hubs
-            if (mouse.x !== undefined && Math.random() > 0.8 && traffic.length < 250) {
-                const nearbyHub = hubs.find(h => Math.sqrt(Math.pow(h.x - mouse.x, 2) + Math.pow(h.y - mouse.y, 2)) < mouse.radius);
-                if (nearbyHub) {
-                    const endHub = hubs[Math.floor(Math.random() * hubs.length)];
-                    if (nearbyHub !== endHub) {
-                        traffic.push(new Traffic(nearbyHub, endHub));
-                    }
+            // Continuous traffic generation
+            if (Math.random() > 0.95 && traffic.length < 150) { // Add a new particle if not too crowded
+                const generators = hubs.filter(h => h.type === 'generator');
+                if (generators.length > 0) {
+                    const gen = generators[Math.floor(Math.random() * generators.length)];
+                    traffic.push(new Traffic(gen));
                 }
             }
 
