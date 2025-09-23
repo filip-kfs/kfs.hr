@@ -1,4 +1,10 @@
 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 :root {
     --background-color: #FFFFFF;
     --primary-text-color: #111827;
